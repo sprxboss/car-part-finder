@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Auto Parts Finder</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    color: #f8fafc;
+  }
+  .subtitle {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 28px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: #1e2130;
+    border: 1px solid #2d3148;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 700px;
+    margin: 0 auto 24px;
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+
+  /* ── Parts list ── */
+  #parts-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+
+  .part-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .part-row input {
+    flex: 1;
+    background: #0f1117;
+    border: 1px solid #2d3148;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    padding: 9px 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .part-row input:focus { border-color: #6366f1; }
+  .part-row input::placeholder { color: #475569; }
+
+  .btn-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-remove { background: #3b1c1c; color: #f87171; }
+  .btn-remove:hover { background: #5c2626; }
+  .btn-add {
+    background: #1e3a2a;
+    color: #4ade80;
+    border: 1px dashed #2d5a3d;
+    width: 100%;
+    height: 36px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-add:hover { background: #25472f; }
+
+  /* ── Car info row ── */
+  .car-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  /* ── Location row ── */
+  .loc-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  input, select {
+    background: #0f1117;
+    border: 1px solid #2d3148;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    padding: 9px 13px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus { border-color: #6366f1; }
+  select option { background: #1e2130; }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  /* ── Search button ── */
+  #search-btn {
+    width: 100%;
+    padding: 12px;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #search-btn:hover { background: #4f46e5; }
+  #search-btn:disabled { background: #3d3f6e; cursor: not-allowed; }
+
+  /* ── Spinner ── */
+  #loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+    font-size: 0.95rem;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid #2d3148;
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Results ── */
+  #results { max-width: 700px; margin: 0 auto; }
+
+  .results-header {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 6px 0 10px;
+    border-bottom: 1px solid #2d3148;
+    margin-bottom: 12px;
+  }
+  .results-header.green { color: #4ade80; }
+  .results-header.yellow { color: #facc15; }
+  .results-header.red { color: #f87171; }
+
+  /* ── Store card ── */
+  .store-card {
+    background: #1e2130;
+    border: 1px solid #2d3148;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+  .store-card.has-all { border-color: #22543d; background: #152820; }
+
+  .store-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+  .store-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #f1f5f9;
+  }
+  .store-meta {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .badge {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .badge-dist { background: #1e3a5f; color: #93c5fd; }
+  .badge-total { background: #1a3a2a; color: #4ade80; }
+  .badge-partial-total { background: #3a2a1a; color: #fb923c; }
+
+  .parts-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .part-chip {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .part-chip.found { background: #1c3a2a; color: #86efac; border: 1px solid #2d5a3d; }
+  .part-chip.missing { background: #2d1a1a; color: #fca5a5; border: 1px solid #5a2d2d; }
+  .part-price { font-weight: 700; }
+
+  /* ── Error box ── */
+  .error-box {
+    background: #2d1a1a;
+    border: 1px solid #5a2d2d;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #fca5a5;
+    font-size: 0.88rem;
+    margin-bottom: 12px;
+  }
+
+  .no-results {
+    text-align: center;
+    color: #475569;
+    padding: 30px;
+    font-size: 0.9rem;
+  }
+
+  .divider { margin: 18px 0; }
+</style>
+</head>
+<body>
+
+<h1>Auto Parts Finder</h1>
+<p class="subtitle">Find stores with ALL your parts — sorted by distance &amp; price</p>
+
+<!-- Search form -->
+<div class="card">
+  <div class="section-label">Parts you need</div>
+  <div id="parts-list">
+    <div class="part-row">
+      <input type="text" placeholder="e.g. AC Condenser" />
+    </div>
+    <div class="part-row">
+      <input type="text" placeholder="e.g. Radiator" />
+    </div>
+  </div>
+  <button class="btn-add" onclick="addPart()">+ Add another part</button>
+
+  <div class="divider"></div>
+
+  <div class="section-label">Vehicle <span style="color:#f87171;font-size:0.7rem;">required by car-part.com</span></div>
+  <div class="car-row">
+    <div>
+      <label>Year <span style="color:#f87171">*</span></label>
+      <input type="text" id="year" placeholder="2015" maxlength="4" />
+    </div>
+    <div>
+      <label>Make <span style="color:#f87171">*</span></label>
+      <input type="text" id="make" placeholder="Toyota" />
+    </div>
+    <div>
+      <label>Model <span style="color:#f87171">*</span></label>
+      <input type="text" id="model" placeholder="Camry" />
+    </div>
+  </div>
+
+  <div class="section-label">Location</div>
+  <div class="loc-row">
+    <div>
+      <label>ZIP Code</label>
+      <input type="text" id="zip" placeholder="75001" maxlength="10" />
+    </div>
+    <div>
+      <label>Radius</label>
+      <select id="radius">
+        <option value="25">25 mi</option>
+        <option value="50" selected>50 mi</option>
+        <option value="100">100 mi</option>
+        <option value="200">200 mi</option>
+        <option value="500">500 mi</option>
+      </select>
+    </div>
+  </div>
+
+  <button id="search-btn" onclick="doSearch()">Search Parts</button>
+</div>
+
+<!-- Loading / progress -->
+<div id="loading" style="display:none">
+  <div class="spinner"></div>
+  <div id="progress-text">Starting search…</div>
+  <div id="progress-track" style="margin-top:12px;max-width:400px;margin-left:auto;margin-right:auto"></div>
+</div>
+
+<!-- Results -->
+<div id="results"></div>
+
+<script>
+function addPart() {
+  const list = document.getElementById('parts-list');
+  const row = document.createElement('div');
+  row.className = 'part-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Part name…" />
+    <button class="btn-icon btn-remove" onclick="this.parentElement.remove()" title="Remove">✕</button>
+  `;
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function getParts() {
+  return Array.from(document.querySelectorAll('#parts-list input'))
+    .map(i => i.value.trim())
+    .filter(Boolean);
+}
+
+function setProgress(msg) {
+  document.getElementById('progress-text').textContent = msg;
+}
+
+function addProgressLine(html) {
+  const track = document.getElementById('progress-track');
+  const div = document.createElement('div');
+  div.style.cssText = 'font-size:0.82rem;color:#94a3b8;padding:2px 0;text-align:center;';
+  div.innerHTML = html;
+  track.appendChild(div);
+}
+
+async function doSearch() {
+  const parts = getParts();
+  const zip   = document.getElementById('zip').value.trim();
+  const year  = document.getElementById('year').value.trim();
+  const make  = document.getElementById('make').value.trim();
+  const model = document.getElementById('model').value.trim();
+  const radius = parseInt(document.getElementById('radius').value);
+
+  if (!parts.length)            { alert('Add at least one part.'); return; }
+  if (!year || !make || !model) { alert('Year, Make, and Model are required (car-part.com needs them to search).'); return; }
+  if (!zip)                     { alert('Enter your ZIP code.'); return; }
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('progress-track').innerHTML = '';
+  document.getElementById('results').innerHTML = '';
+
+  const sharedParams = { year, make, model, zip, radius };
+  const partResults  = [];
+
+  try {
+    // Search each part one at a time and show live progress
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      setProgress(`Searching for ${part}… (${i + 1} of ${parts.length})`);
+
+      const resp = await fetch('/api/search/part', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ part, ...sharedParams }),
+      });
+      const data = await resp.json();
+      partResults.push(data);
+
+      if (data.error) {
+        addProgressLine(`⚠ ${part}: ${data.error}`);
+      } else {
+        addProgressLine(`✓ ${part} — ${data.results.length} store${data.results.length !== 1 ? 's' : ''} found`);
+      }
+    }
+
+    // Aggregate
+    setProgress('Comparing stores…');
+    const aggResp = await fetch('/api/aggregate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parts, results: partResults }),
+    });
+    const final = await aggResp.json();
+    renderResults(final, parts);
+
+  } catch (e) {
+    document.getElementById('results').innerHTML =
+      `<div class="error-box">Network error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+function fmt(price) {
+  if (price == null) return 'N/A';
+  return '$' + price.toFixed(2);
+}
+
+function renderResults(data, parts) {
+  const el = document.getElementById('results');
+
+  if (data.error) {
+    el.innerHTML = `<div class="error-box">${data.error}</div>`;
+    return;
+  }
+
+  let html = '';
+
+  // ── Errors ──
+  if (data.errors && data.errors.length) {
+    data.errors.forEach(e => {
+      html += `<div class="error-box">⚠ Could not fetch "${e.part}": ${e.error}</div>`;
+    });
+  }
+
+  // ── Stores with ALL parts ──
+  html += `<div class="results-header green">
+    ✓ Stores with ALL ${parts.length} part${parts.length > 1 ? 's' : ''} (${data.stores_with_all.length})
+  </div>`;
+
+  if (data.stores_with_all.length === 0) {
+    html += `<div class="no-results">No single store had all your parts nearby.</div>`;
+  } else {
+    data.stores_with_all.forEach(s => { html += storeCard(s, true, parts); });
+  }
+
+  // ── Partial matches ──
+  if (data.stores_partial.length) {
+    html += `<div class="divider"></div>
+      <div class="results-header yellow">
+        ~ Partial matches — ${data.stores_partial.length} store${data.stores_partial.length > 1 ? 's' : ''} with some parts
+      </div>`;
+    data.stores_partial.forEach(s => { html += storeCard(s, false, parts); });
+  }
+
+  if (!data.stores_with_all.length && !data.stores_partial.length) {
+    html += `<div class="no-results">No results found. Try a larger radius or check your spelling.</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function storeCard(s, hasAll, allParts) {
+  const distBadge = s.distance != null
+    ? `<span class="badge badge-dist">${s.distance} mi</span>`
+    : '';
+  const totalBadge = s.total_price > 0
+    ? `<span class="badge ${hasAll ? 'badge-total' : 'badge-partial-total'}">${fmt(s.total_price)} total</span>`
+    : '';
+
+  let chips = '';
+  // Found parts
+  for (const [part, price] of Object.entries(s.parts_found)) {
+    chips += `<span class="part-chip found">✓ ${part} <span class="part-price">${fmt(price)}</span></span>`;
+  }
+  // Missing parts
+  (s.parts_missing || []).forEach(p => {
+    chips += `<span class="part-chip missing">✗ ${p}</span>`;
+  });
+
+  return `
+    <div class="store-card ${hasAll ? 'has-all' : ''}">
+      <div class="store-top">
+        <div class="store-name">${s.store}</div>
+        <div class="store-meta">${distBadge}${totalBadge}</div>
+      </div>
+      <div class="parts-grid">${chips}</div>
+    </div>`;
+}
+
+// Allow Enter key in ZIP to trigger search
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('zip').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+});
+</script>
+</body>
+</html>
